@@ -116,6 +116,18 @@ void joinFile(char *chunkName, char *fileOutput) {
         else { cout << "Error: Unable to open file for output." << endl; }
 }
 
+unsigned int hashChunk(char *name){
+        unsigned int i;
+        unsigned int hash_value = 2166136261;
+        unsigned char *key = (unsigned char *)name;
+        for (i = 0; i < 16; i++)
+                hash_value = (hash_value * 16777619) ^ key[i];
+        //XOR folding for 16 bit result (how big will hash table be?)
+        hash_value = (hash_value & (((u_int32_t)1<<16)-1));
+        return hash_value;
+}
+
+
 // Simply gets the file size of file.
 int getFileSize(ifstream *file) {
         file->seekg(0,ios::end);
