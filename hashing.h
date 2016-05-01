@@ -13,4 +13,7 @@ int getFileSize(std::ifstream *file);
 
 unsigned int hashChunk(char *name);
 
+
+void saveToTable(unsigned int x, const char * name);
+
 #endif
