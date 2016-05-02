@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTURES_H
 #define DATASTRCUTURES_H
-
-#define CHUNK_SIZE 16384
+//#define CHUNK_SIZE 16384
+#define CHUNK_SIZE 1000
 #include <cstdio>
 
 #include <fstream>
@@ -11,9 +11,9 @@ void joinFile(char *chunkName, char *fileOutput);
 
 int getFileSize(std::ifstream *file);
 
-unsigned int hashChunk(char *name);
+int hashChunk(unsigned int hash, const char *name);
 
 
-void saveToTable(unsigned int x, const char * name);
+int saveToTable(unsigned int x, const char * name);
 
 #endif

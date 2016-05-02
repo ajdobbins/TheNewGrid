@@ -1,18 +1,19 @@
-#
 //   -std=c++0x to compile
 #include "hashing.h"
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
-#define NETWORK_SIZE 10;
+#include <string>
+#define NETWORK_SIZE 3;
 using namespace std;
 #include <boost/functional/hash.hpp>
 #include <unordered_map>
 #include <utility>
 //const char * hash_table[HASH_TABLE_SIZE];
 
-    unordered_map <int,const char*> hash_table;
+//giving file name should reveal which device file is held on
+    unordered_map <const char*, int> device_map;
 // Chunks a file by breaking it up into chunks of "chunkSize" bytes.
 // Credit to Martyr2 
 // http://www.coderslexicon.com/file-chunking-and-merging-in-c/
@@ -26,7 +27,7 @@ void chunkFile(char *fullFilePath, char *chunkName, unsigned long chunkSize) {
                 int counter = 1;
 
                 string fullChunkName;
-
+		
                 // Create a buffer to hold each chunk
                 char *buffer = new char[chunkSize];
 
@@ -40,15 +41,29 @@ void chunkFile(char *fullFilePath, char *chunkName, unsigned long chunkSize) {
                         fullChunkName.append(".");
 
                      // Convert counter integer into string and append to name.
-                        /*char intBuf[10];
-                        itoa(counter,intBuf,10);*/
+                        
                         stringstream intBuf;
                         intBuf << counter;
                         fullChunkName.append(intBuf.str());
 
-                        // Open new chunk file name for output
-                        output.open(fullChunkName.c_str(),ios::out | ios::trunc | ios::binary);
+  			//store in hash table
 
+			boost::hash<std::string> string_hash;
+                        const char *fName = fullChunkName.c_str();
+                        unsigned int x = string_hash(fName);
+                        int devID = saveToTable(x, fName);
+                	string devicePath;
+			devicePath.append("device");
+
+			      stringstream intBuf2;
+                        intBuf2 << devID;
+                        devicePath.append(intBuf2.str());
+
+			devicePath.append("/");
+			devicePath.append(fullChunkName);
+                        // Open new chunk file name for output
+                        output.open(devicePath.c_str(),ios::out | ios::trunc | ios::binary);
+			                        cout<<devicePath<<endl;
                         // If chunk file opened successfully, read from input and 
                         // write to output chunk. Then close.
                         if (output.is_open()) { 
@@ -58,15 +73,9 @@ void chunkFile(char *fullFilePath, char *chunkName, unsigned long chunkSize) {
                                 output.close();
 
                                 counter++;
-//if (fullChunkName.size () > 0)  fullChunkName.resize (fullChunkName.size () - 1);
-                                //store in hash table
-                                //unsigned int x = hashChunk(fullChunkName.c_str());
-                                boost::hash<std::string> string_hash;
-                                const char *fName = fullChunkName.c_str();
-                                unsigned int x = string_hash(fName);
-                                saveToTable(x, fName);
-                                cout<<x<<" "<<fName<<endl;
-        }
+
+                              
+       			 }
                 }
 
                 // Cleanup buffer
@@ -145,6 +154,12 @@ void joinFile(char *chunkName, char *fileOutput) {
 
 }
 
+
+
+
+
+
+
 // Simply gets the file size of file.
 int getFileSize(ifstream *file) {
         file->seekg(0,ios::end);
@@ -153,31 +168,44 @@ int getFileSize(ifstream *file) {
         return filesize;
 }
 
-void saveToTable(unsigned int hash, const char* name)
+//saves in the hash table
+//calculates which device this chunk should be sent to
+int saveToTable(unsigned int hash, const char* name)
 {
-        int x;
+	int x;
         x = hash % NETWORK_SIZE;
         //device ID?
-        hash_table.insert({x, name});
-        return;
+        device_map.insert({name, x});
+        return x;
 
 }
 
+int hashChunk(unsigned int hash, const char *name)
+{ 
+	    		cout << name<<endl;
+	
+	 unordered_map <const char*, int>::const_iterator chunkName = device_map.find(name);
 
-/*int main()
+	if ( chunkName == device_map.end() )
+    		cout << "not found";
+  	//else
+    		//cout << name<<endl;
+	return chunkName->second;
+}
+int main()
 {
         char *ffp ="test.c";
         chunkFile(ffp, ffp, CHUNK_SIZE/8);
 //      char *chunk = "storage.h.1";
         char *output = "og.h";
-        joinFile(ffp,output);
-        char *ffp1 ="test.c.1";
+       // joinFile(ffp,output);
+        
 
 //unsigned int x = hashChunk(ffp1);
 //cout<<x<<endl;
 
         return 1;
-}*/
+}
 
 
 
